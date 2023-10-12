@@ -1,0 +1,49 @@
+version: "3"
+services:
+  express:
+    image: node:20.4.0 # Use an official Node.js image
+    container_name: express
+    working_dir: /app
+    volumes:
+      - ./api/:/app # Map your Node.js app directory
+    networks:
+      - dbnetwork
+    ports:
+      - "3000:3000" # Map host port to container port
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/
+    command: npm run start:dev
+    depends_on:
+      - mongodb
+
+  mongodb:
+    image: mongo:latest # Use an official MongoDB image
+    container_name: mongodb
+    networks:
+      - dbnetwork
+    volumes:
+      - dbdata:/data/db # Create a volume to persist MongoDB data
+    ports:
+      - "27017:27017" # Map host port to container port
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: examplepassword
+
+  app:
+    user: 'node'
+    image: node:20.4.0 # Use an official Node.js image
+    container_name: app # Give a container name
+    restart: unless-stopped
+    working_dir: /app # Set working directory for the container
+    volumes:
+      - ./client/:/app # Map your Vue.js app directory
+    ports:
+      - '8080:5173' # Map host port to container port
+    command: sh -c "npm i && npm run dev"
+
+volumes:
+  dbdata: # Create a volume to persist MongoDB data
+
+networks:
+  dbnetwork:
+    driver: bridge
